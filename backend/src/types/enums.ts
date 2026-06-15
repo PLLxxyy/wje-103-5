@@ -16,3 +16,8 @@ export enum VoteStatus {
   OPEN = 'open',
   CLOSED = 'closed'
 }
+
+export enum FavoriteType {
+  GROUPBUY = 'groupbuy',
+  SHOP = 'shop'
+}

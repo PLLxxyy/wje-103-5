@@ -10,6 +10,7 @@ const auth = useAuth();
 
 const activeTab = computed(() => {
   if (route.path.startsWith('/shops')) return '/shops';
+  if (route.path.startsWith('/my/favorites')) return '/my/favorites';
   if (route.path.startsWith('/my/joins')) return '/my/joins';
   if (route.path.startsWith('/order/manage')) return '/order/manage';
   return '/';
@@ -46,6 +47,7 @@ const logout = () => {
     <van-tabbar v-if="route.path !== '/login'" :model-value="activeTab" route safe-area-inset-bottom>
       <van-tabbar-item to="/" icon="fire-o">团购</van-tabbar-item>
       <van-tabbar-item to="/shops" icon="shop-o">店铺</van-tabbar-item>
+      <van-tabbar-item to="/my/favorites" icon="star-o">收藏</van-tabbar-item>
       <van-tabbar-item to="/my/joins" icon="orders-o">接龙</van-tabbar-item>
       <van-tabbar-item
         v-permission="[UserRole.LEADER, UserRole.ADMIN]"

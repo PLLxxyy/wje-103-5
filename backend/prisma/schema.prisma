@@ -21,6 +21,11 @@ enum GroupBuyStatus {
   cancelled
 }
 
+enum FavoriteType {
+  groupbuy
+  shop
+}
+
 model User {
   id            String       @id @default(cuid()) @db.VarChar(191)
   nickname      String       @db.VarChar(80)
@@ -32,6 +37,7 @@ model User {
   groupBuys     GroupBuy[]   @relation("LeaderGroupBuys")
   joinRecords   JoinRecord[]
   voteRecords   VoteRecord[]
+  favorites     Favorite[]
 
   @@map("users")
 }
@@ -140,4 +146,18 @@ model VoteRecord {
   @@unique([vote_option_id, user_id])
   @@index([user_id])
   @@map("vote_records")
+}
+
+model Favorite {
+  id          String       @id @default(cuid()) @db.VarChar(191)
+  user_id     String       @db.VarChar(191)
+  target_type FavoriteType
+  target_id   String       @db.VarChar(191)
+  created_at  DateTime     @default(now())
+  user        User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, target_type, target_id])
+  @@index([user_id])
+  @@index([target_type, target_id])
+  @@map("favorites")
 }

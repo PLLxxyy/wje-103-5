@@ -4,6 +4,7 @@ import { config } from './config';
 import { errorHandler } from './middlewares/errorHandler';
 import { requestLogger } from './middlewares/requestLogger';
 import authRoutes from './routes/auth';
+import favoriteRoutes from './routes/favorite';
 import groupBuyRoutes from './routes/groupbuy';
 import joinRoutes from './routes/join';
 import shopRoutes from './routes/shop';
@@ -24,5 +25,6 @@ app.use('/api/groupbuys', groupBuyRoutes);
 app.use('/api/shops', shopRoutes);
 app.use('/api/joins', joinRoutes);
 app.use('/api/votes', voteRoutes);
+app.use('/api/favorites', favoriteRoutes);
 
 app.use(errorHandler);

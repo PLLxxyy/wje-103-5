@@ -1,17 +1,43 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import GroupBuyCard from '@/components/common/GroupBuyCard.vue';
 import { useShopStore } from '@/stores/useShopStore';
+import { useFavoriteStore } from '@/stores/useFavoriteStore';
+import { useAuth } from '@/hooks/useAuth';
+import { FavoriteType } from '@/types/enums';
 import { formatPrice } from '@/utils/format';
 
+const router = useRouter();
+const auth = useAuth();
 const shopStore = useShopStore();
+const favoriteStore = useFavoriteStore();
 const selectedId = ref('');
+const favoritedMap = ref<Record<string, boolean>>({});
 
 const selectedShop = computed(() => shopStore.current ?? shopStore.list.find((shop) => shop.id === selectedId.value));
 
 const selectShop = async (id: string) => {
   selectedId.value = id;
   await shopStore.fetchDetail(id);
+};
+
+const toggleFavorite = async (e: Event, shopId: string) => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (!auth.currentUser.value) {
+    router.push('/login');
+    return;
+  }
+  const result = await favoriteStore.toggle(FavoriteType.SHOP, shopId);
+  favoritedMap.value[shopId] = result.favorited;
+};
+
+const isFavorited = (shopId: string) => {
+  if (favoritedMap.value[shopId] !== undefined) {
+    return favoritedMap.value[shopId];
+  }
+  return favoriteStore.isFavorited(FavoriteType.SHOP, shopId);
 };
 
 onMounted(async () => {
@@ -39,13 +65,33 @@ onMounted(async () => {
         :class="{ active: selectedId === shop.id }"
         @click="selectShop(shop.id)"
       >
-        <img :src="shop.logo || ''" :alt="shop.name" />
+        <div class="shop-cover">
+          <img :src="shop.logo || ''" :alt="shop.name" />
+          <button
+            class="favorite-btn"
+            :class="{ active: isFavorited(shop.id) }"
+            type="button"
+            @click="toggleFavorite($event, shop.id)"
+          >
+            <van-icon :name="isFavorited(shop.id) ? 'star' : 'star-o'" size="14" />
+          </button>
+        </div>
         <span>{{ shop.name }}</span>
       </button>
     </section>
 
     <section v-if="selectedShop" class="section shop-hero">
-      <img :src="selectedShop.logo || ''" :alt="selectedShop.name" />
+      <div class="shop-hero-cover">
+        <img :src="selectedShop.logo || ''" :alt="selectedShop.name" />
+        <button
+          class="favorite-btn"
+          :class="{ active: isFavorited(selectedShop.id) }"
+          type="button"
+          @click="toggleFavorite($event, selectedShop.id)"
+        >
+          <van-icon :name="isFavorited(selectedShop.id) ? 'star' : 'star-o'" size="20" />
+        </button>
+      </div>
       <div>
         <h1>{{ selectedShop.name }}</h1>
         <p>{{ selectedShop.description }}</p>
@@ -118,11 +164,38 @@ onMounted(async () => {
   background: #fff1f2;
 }
 
-.shop-strip img {
+.shop-cover {
+  position: relative;
+}
+
+.shop-cover img {
   width: 100%;
   aspect-ratio: 1.25;
   object-fit: cover;
   border-radius: 8px;
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(46, 29, 22, 0.55);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.favorite-btn.active {
+  color: #ffd166;
+  background: rgba(46, 29, 22, 0.7);
 }
 
 .shop-strip span {
@@ -141,11 +214,22 @@ onMounted(async () => {
   border: 1px solid #ead8c7;
 }
 
-.shop-hero img {
+.shop-hero-cover {
+  position: relative;
+}
+
+.shop-hero-cover img {
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 8px;
+}
+
+.shop-hero-cover .favorite-btn {
+  top: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
 }
 
 .shop-hero h1 {

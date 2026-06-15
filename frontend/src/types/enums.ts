@@ -17,6 +17,11 @@ export enum VoteStatus {
   CLOSED = 'closed'
 }
 
+export enum FavoriteType {
+  GROUPBUY = 'groupbuy',
+  SHOP = 'shop'
+}
+
 export const groupBuyStatusText: Record<GroupBuyStatus, string> = {
   [GroupBuyStatus.RECRUITING]: '征集中',
   [GroupBuyStatus.CLOSED]: '已截单',

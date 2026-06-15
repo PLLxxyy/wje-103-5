@@ -1,26 +1,61 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { RouterLink } from 'vue-router';
 import type { GroupBuy } from '@/types/groupbuy';
 import { formatPrice } from '@/utils/format';
 import CountdownTimer from './CountdownTimer.vue';
 import StatusBadge from './StatusBadge.vue';
+import { useFavoriteStore } from '@/stores/useFavoriteStore';
+import { FavoriteType } from '@/types/enums';
+import { useAuth } from '@/hooks/useAuth';
 
 const props = defineProps<{
   groupBuy: GroupBuy;
   compact?: boolean;
 }>();
 
+const router = useRouter();
+const auth = useAuth();
+const favoriteStore = useFavoriteStore();
+const favorited = ref(false);
+
 const joinedQuantity = computed(() =>
   (props.groupBuy.joinRecords ?? []).reduce((sum, record) => sum + Number(record.quantity), 0)
 );
 const progress = computed(() => Math.min(100, Math.round((joinedQuantity.value / props.groupBuy.min_quantity) * 100)));
 const cover = computed(() => props.groupBuy.shop?.logo || 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=600&q=80');
+
+onMounted(() => {
+  if (auth.currentUser.value) {
+    favorited.value = favoriteStore.isFavorited(FavoriteType.GROUPBUY, props.groupBuy.id);
+  }
+});
+
+const toggleFavorite = async (e: Event) => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (!auth.currentUser.value) {
+    router.push('/login');
+    return;
+  }
+  const result = await favoriteStore.toggle(FavoriteType.GROUPBUY, props.groupBuy.id);
+  favorited.value = result.favorited;
+};
 </script>
 
 <template>
   <RouterLink class="group-card" :class="{ compact }" :to="`/groupbuy/${groupBuy.id}`">
-    <div class="cover" :style="{ backgroundImage: `url(${cover})` }" />
+    <div class="cover" :style="{ backgroundImage: `url(${cover})` }">
+      <button
+        class="favorite-btn"
+        :class="{ active: favorited }"
+        type="button"
+        @click="toggleFavorite"
+      >
+        <van-icon :name="favorited ? 'star' : 'star-o'" :size="compact ? 16 : 18" />
+      </button>
+    </div>
     <div class="content">
       <div class="title-row">
         <h3>{{ groupBuy.title }}</h3>
@@ -59,10 +94,34 @@ const cover = computed(() => props.groupBuy.shop?.logo || 'https://images.unspla
 }
 
 .cover {
+  position: relative;
   min-height: 116px;
   border-radius: 8px;
   background-position: center;
   background-size: cover;
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(46, 29, 22, 0.55);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.favorite-btn.active {
+  color: #ffd166;
+  background: rgba(46, 29, 22, 0.7);
 }
 
 .content {

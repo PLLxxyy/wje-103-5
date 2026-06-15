@@ -35,6 +35,12 @@ const routes: RouteRecordRaw[] = [
     name: 'my-joins',
     component: () => import('@/pages/MyJoins.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/my/favorites',
+    name: 'my-favorites',
+    component: () => import('@/pages/MyFavorites.vue'),
+    meta: { requiresAuth: true }
   }
 ];
 
